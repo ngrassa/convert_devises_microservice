@@ -4,6 +4,7 @@ Application composée de trois microservices Flask : un service qui récupère l
 
 Pour une installation clé en main sur Ubuntu, exécutez le script `[setup_ubuntu.sh](./setup_ubuntu.sh)` depuis la racine du dépôt :
 ```bash
+wget https://github.com/ngrassa/convert_devises_microservice/blob/master/setup_ubuntu.sh
 chmod +x ./setup_ubuntu.sh
 ./setup_ubuntu.sh
 ```
@@ -125,3 +126,10 @@ pytest
 - Le service de taux dépend d'une API externe ; assurez-vous d'avoir un accès réseau à `api.exchangerate.host`.
 - Le service des taux interroge toujours le TND pour qu'il soit disponible si vous souhaitez convertir depuis/vers le dinar tunisien.
 - Le formulaire web propose un bouton « Swap » pour intervertir rapidement les devises source et cible.
+## Verifier vos conteneurs (3 conteneurs docker en état de marche ) 
+```bash
+sudo docker ps 
+```
+- convert_devises_microservice-frontend sur le port 8000
+- convert_devises_microservice-convert_service sur le port 5001
+- convert_devises_microservice-rate_service sur le port 5000
