@@ -1,13 +1,13 @@
 # Convertisseur de devises (microservices) testé sur ubuntu 25.04
 
-Application composée de trois microservices Flask : un service qui récupère les taux, un service qui calcule les conversions et une petite interface web. Chaque service tourne dans son propre conteneur Docker et l'ensemble se lance avec `docker-compose`.
+Application composée de trois microservices Flask : un service qui récupère les taux, un service qui calcule les conversions et une petite interface web. Chaque service tourne dans son propre conteneur Docker et l'ensemble se lance avec `docker compose`.
 
 Pour une installation clé en main sur Ubuntu, exécutez le script `[setup_ubuntu.sh](./setup_ubuntu.sh)` depuis la racine du dépôt :
 ```bash
 chmod +x ./setup_ubuntu.sh
 ./setup_ubuntu.sh
 ```
-Il installe les dépendances, construit les images et démarre les conteneurs.
+Il installe les dépendances, construit les images et démarre les conteneurs. Le script force désormais l'installation de Docker Compose v2 (plugin ou binaire autonome) pour éviter les erreurs de `docker-compose` v1 avec Python 3.13+.
 
 ## Services
 - **rate_service** : API Flask qui interroge `api.exchangerate.host` pour obtenir les taux en temps réel.
@@ -15,7 +15,7 @@ Il installe les dépendances, construit les images et démarre les conteneurs.
 - **frontend** : application Flask qui sert une page HTML simple et relaie les requêtes vers `convert_service`.
 
 ## Prérequis
-- Python 3, pip, Flask, Docker et docker-compose installés.
+- Python 3, pip, Flask, Docker et Docker Compose v2 (`docker compose`) installés.
 
 ### Installation automatique (Ubuntu)
 Un script automatise l'installation des dépendances, la construction des images et le lancement des conteneurs :
@@ -23,17 +23,15 @@ Un script automatise l'installation des dépendances, la construction des images
 chmod +x setup_ubuntu.sh
 ./setup_ubuntu.sh
 ```
-Il installe Python 3, pip, Docker, docker-compose, construit les images et démarre les services. Si `docker-compose-plugin` n'est pas disponible sur votre version d'Ubuntu (ex. 25.04), le script bascule automatiquement vers le paquet `docker-compose` ou une installation `pip` pour fournir la commande `docker-compose`. L'interface sera accessible sur http://localhost:8000 (login URL), l'API de conversion sur http://localhost:5001/convert et l'API de taux sur http://localhost:5000/rate. Si le script ajoute votre utilisateur au groupe `docker`, reconnectez-vous (ou lancez `newgrp docker`) pour utiliser Docker sans `sudo`.
+Il installe Python 3, pip, Docker, Docker Compose v2, construit les images et démarre les services. Si `docker-compose-plugin` n'est pas disponible sur votre version d'Ubuntu (ex. 25.04), le script télécharge automatiquement le binaire officiel Docker Compose v2 dans `/usr/local/lib/docker/cli-plugins/docker-compose`. L'interface sera accessible sur http://localhost:8000 (login URL), l'API de conversion sur http://localhost:5001/convert et l'API de taux sur http://localhost:5000/rate. Si le script ajoute votre utilisateur au groupe `docker`, reconnectez-vous (ou lancez `newgrp docker`) pour utiliser Docker sans `sudo`.
 
 ### Ubuntu (terminal Bash)
 1. Installer Python, pip, Flask et Docker :
    ```bash
    sudo apt update
    # docker-compose-plugin (Docker Compose v2) n'est pas présent sur toutes les versions d'Ubuntu.
-   # Remplacez-le par docker-compose si le paquet n'existe pas sur votre distribution.
+   # S'il manque, utilisez le script setup_ubuntu.sh pour installer le binaire officiel Docker Compose v2.
    sudo apt install -y python3 python3-pip python3-venv docker.io docker-compose-plugin
-   # ou, si le paquet ci-dessus est introuvable :
-   # sudo apt install -y python3 python3-pip python3-venv docker.io docker-compose
    python3 -m pip install --user --upgrade pip
    python3 -m pip install --user flask
    ```
@@ -42,10 +40,10 @@ Il installe Python 3, pip, Docker, docker-compose, construit les images et déma
    sudo usermod -aG docker "$USER"
    newgrp docker
    ```
-3. Vérifier que Docker et docker-compose fonctionnent :
+3. Vérifier que Docker et Docker Compose fonctionnent :
    ```bash
    docker --version
-   docker compose version   # ou docker-compose version selon votre installation
+   docker compose version
    ```
 
 ### Windows 11 (PowerShell)
@@ -55,7 +53,7 @@ Il installe Python 3, pip, Docker, docker-compose, construit les images et déma
    python -m pip install --upgrade pip
    python -m pip install flask
    ```
-2. Installer Docker Desktop (inclut docker-compose) :
+2. Installer Docker Desktop (inclut docker compose) :
    ```powershell
    winget install -e --id Docker.DockerDesktop
    ```
@@ -63,27 +61,27 @@ Il installe Python 3, pip, Docker, docker-compose, construit les images et déma
 3. Vérifier que Docker fonctionne :
    ```powershell
    docker --version
-   docker compose version   # ou docker-compose version selon votre installation
+   docker compose version
    ```
 
 ## Installation du projet
 1. Cloner le dépôt puis entrer dans le dossier :
    ```bash
-   git clone <adresse_du_repo> convert_devises_microservices
-   cd convert_devises_microservices
+   git clone <adresse_du_repo> convert_devises_microservice
+   cd convert_devises_microservice
    ```
 2. Construire et lancer tous les conteneurs (premier démarrage) :
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
    Vous pouvez ensuite relancer plus rapidement avec :
    ```bash
-   docker-compose up
+   docker compose up
    ```
 
 ## Lancement avec Docker Compose
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 Les points d'entrée :
 - API des taux : http://localhost:5000/rate

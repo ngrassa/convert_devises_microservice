@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_NAME="convert_devises_microservices"
+REPO_NAME="convert_devises_microservice"
+GIT_URL="https://github.com/ngrassa/convert_devises_microservice.git"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -d "$SCRIPT_DIR/.git" ]; then
@@ -12,7 +13,7 @@ elif [ -d "$REPO_NAME/.git" ]; then
   cd "$REPO_NAME"
 else
   echo ">>> Cloning repository"
-  git clone https://github.com/ngrassa/convert_devises_microservices.git "$REPO_NAME"
+  git clone "$GIT_URL" "$REPO_NAME"
   cd "$REPO_NAME"
 fi
 
@@ -29,36 +30,38 @@ echo ">>> Updating package lists"
 $SUDO apt-get update -y
 
 # Base packages required in every case
-PACKAGES=(python3 python3-pip python3-venv docker.io)
+PACKAGES=(python3 python3-pip python3-venv docker.io curl ca-certificates)
 COMPOSE_CMD="docker compose"
-USE_PIP_COMPOSE=0
+COMPOSE_VERSION="v2.29.2"
+INSTALL_COMPOSE_BINARY=0
 
-echo ">>> Checking for docker compose package availability"
+echo ">>> Checking for docker compose plugin availability"
 if apt-cache show docker-compose-plugin >/dev/null 2>&1; then
   PACKAGES+=(docker-compose-plugin)
   echo "docker-compose-plugin found in apt repositories."
 else
-  echo "docker-compose-plugin not available. Trying docker-compose package."
-  if apt-cache show docker-compose >/dev/null 2>&1; then
-    PACKAGES+=(docker-compose)
-    COMPOSE_CMD="docker-compose"
-    echo "docker-compose package will be installed."
-  else
-    echo "Neither docker-compose-plugin nor docker-compose available; falling back to pip installation."
-    USE_PIP_COMPOSE=1
-    COMPOSE_CMD="$HOME/.local/bin/docker-compose"
-  fi
+  echo "docker-compose-plugin not available. A standalone Docker Compose v2 binary will be installed."
+  INSTALL_COMPOSE_BINARY=1
 fi
 
 echo ">>> Installing packages: ${PACKAGES[*]}"
 $SUDO apt-get install -y "${PACKAGES[@]}"
 
-if [ "$USE_PIP_COMPOSE" -eq 1 ]; then
-  echo ">>> Installing docker-compose via pip for current user"
-  python3 -m pip install --user --upgrade pip
-  python3 -m pip install --user docker-compose
-  # Ensure docker-compose is on PATH for the current session
-  export PATH="$HOME/.local/bin:$PATH"
+if [ "$INSTALL_COMPOSE_BINARY" -eq 1 ]; then
+  echo ">>> Installing Docker Compose v2 binary (${COMPOSE_VERSION})"
+  DEST_DIR="/usr/local/lib/docker/cli-plugins"
+  $SUDO mkdir -p "$DEST_DIR"
+  ARCH="$(uname -m)"
+  case "$ARCH" in
+    x86_64) COMPOSE_ARCH="x86_64" ;;
+    aarch64|arm64) COMPOSE_ARCH="aarch64" ;;
+    *)
+      echo "Unsupported architecture: $ARCH"
+      exit 1
+      ;;
+  esac
+  $SUDO curl -sSL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-${COMPOSE_ARCH}" -o "$DEST_DIR/docker-compose"
+  $SUDO chmod +x "$DEST_DIR/docker-compose"
 fi
 
 echo ">>> Ensuring Docker service is running"
@@ -68,6 +71,11 @@ if ! groups "$USER" | grep -q "\bdocker\b"; then
   echo ">>> Adding $USER to docker group (you may need to re-login afterwards)"
   $SUDO usermod -aG docker "$USER"
   echo ">>> Apply new group with: newgrp docker"
+fi
+
+if ! docker compose version >/dev/null 2>&1; then
+  echo ">>> Docker Compose v2 is not available. Please check the installation steps above."
+  exit 1
 fi
 
 echo ">>> Building and starting containers"
