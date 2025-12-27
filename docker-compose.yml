@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  rate_service:
+    build: ./rate_service
+    ports:
+      - "5000:5000"
+    environment:
+      - EXTERNAL_RATE_API=https://api.exchangerate.host/latest
+
+  convert_service:
+    build: ./convert_service
+    depends_on:
+      - rate_service
+    ports:
+      - "5001:5001"
+    environment:
+      - RATE_SERVICE_URL=http://rate_service:5000
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - convert_service
+    ports:
+      - "8000:8000"
+    environment:
+      - CONVERTER_URL=http://convert_service:5001
