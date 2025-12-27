@@ -7,7 +7,7 @@ Pour une installation clé en main sur Ubuntu, exécutez le script `[setup_ubunt
 chmod +x ./setup_ubuntu.sh
 ./setup_ubuntu.sh
 ```
-Il installe les dépendances, construit les images et démarre les conteneurs. Le script force désormais l'installation de Docker Compose v2 (plugin ou binaire autonome) pour éviter les erreurs de `docker-compose` v1 avec Python 3.13+.
+Il installe les dépendances, vérifie l'accès au démon Docker (bascule automatiquement sur `sudo` si nécessaire), construit les images et démarre les conteneurs. Le script force l'installation de Docker Compose v2 (plugin ou binaire autonome) pour éviter les erreurs de `docker-compose` v1 avec Python 3.13+. Le fichier `docker-compose.yml` utilise le format Compose v2 par défaut (clé `version` supprimée) afin de supprimer les avertissements.
 
 ## Services
 - **rate_service** : API Flask qui interroge `api.exchangerate.host` pour obtenir les taux en temps réel.

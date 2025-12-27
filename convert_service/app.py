@@ -46,15 +46,16 @@ def convert():
         return jsonify({"error": rate_result["error"]}), 502
 
     converted = convert_amount(amount, rate_result["rate"])
-    return jsonify(
-        {
-            "base": base,
-            "target": target,
-            "amount": float(amount),
-            "rate": float(rate_result["rate"]),
-            "converted": float(converted),
-        }
-    )
+    payload = {
+        "base": base,
+        "target": target,
+        "amount": float(amount),
+        "rate": float(rate_result["rate"]),
+        "converted": float(converted),
+    }
+    if "note" in rate_result:
+        payload["note"] = rate_result["note"]
+    return jsonify(payload)
 
 
 @app.route("/health", methods=["GET"])

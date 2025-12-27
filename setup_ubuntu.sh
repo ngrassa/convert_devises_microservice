@@ -31,7 +31,6 @@ $SUDO apt-get update -y
 
 # Base packages required in every case
 PACKAGES=(python3 python3-pip python3-venv docker.io curl ca-certificates)
-COMPOSE_CMD="docker compose"
 COMPOSE_VERSION="v2.29.2"
 INSTALL_COMPOSE_BINARY=0
 
@@ -73,7 +72,22 @@ if ! groups "$USER" | grep -q "\bdocker\b"; then
   echo ">>> Apply new group with: newgrp docker"
 fi
 
-if ! docker compose version >/dev/null 2>&1; then
+DOCKER_CMD="docker"
+COMPOSE_CMD="$DOCKER_CMD compose"
+
+echo ">>> Verifying Docker access"
+if ! $DOCKER_CMD info >/dev/null 2>&1; then
+  if [ -n "$SUDO" ] && $SUDO docker info >/dev/null 2>&1; then
+    echo ">>> Docker requires elevated privileges in this session; falling back to sudo for Compose commands"
+    DOCKER_CMD="$SUDO docker"
+    COMPOSE_CMD="$DOCKER_CMD compose"
+  else
+    echo ">>> Docker daemon is not accessible. Check that the service is running and that your user has permissions."
+    exit 1
+  fi
+fi
+
+if ! $COMPOSE_CMD version >/dev/null 2>&1; then
   echo ">>> Docker Compose v2 is not available. Please check the installation steps above."
   exit 1
 fi
