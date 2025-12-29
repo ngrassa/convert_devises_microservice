@@ -1,4 +1,4 @@
-# Convertisseur de devises (microservices) testé sur ubuntu 25.04
+# Convertisseur de devises (microservices en python) testé sur ubuntu 25.04
 
 Application composée de trois microservices Flask : un service qui récupère les taux, un service qui calcule les conversions et une petite interface web. Chaque service tourne dans son propre conteneur Docker et l'ensemble se lance avec `docker compose`.
 
